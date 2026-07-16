@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Frontera Wildfire Risk Webmap</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/styles.css?v=20260716-raster-test-1" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="map-panel" aria-label="Interactive wildfire risk map">
+        <div class="map-search-panel">
+          <div class="search-panel">
+            <label for="community-search">Community</label>
+            <div class="search-row">
+              <input
+                id="community-search"
+                type="search"
+                autocomplete="off"
+                list="community-options"
+                placeholder="Search BC communities"
+              />
+              <button id="clear-search" type="button" aria-label="Clear selected community">Clear</button>
+            </div>
+            <datalist id="community-options"></datalist>
+          </div>
+
+          <div class="fire-panel">
+            <label for="fire-select">Search for Active Wildfires</label>
+            <div class="fire-row">
+              <select id="fire-select">
+                <option value="">Select an active wildfire</option>
+              </select>
+              <button id="clear-fire" type="button" aria-label="Clear selected wildfire">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="map" aria-label="BC community wildfire risk map"></div>
+      </section>
+
+      <aside id="community-sidebar" class="sidebar" aria-live="polite">
+        <div class="sidebar-empty">
+          <h1>Frontera Wildfire Risk</h1>
+          <p>Select a community or active wildfire to view its details.</p>
+        </div>
+      </aside>
+    </main>
+
+    <div id="graph-modal" class="graph-modal" aria-hidden="true">
+      <div class="graph-modal-backdrop" data-close-modal></div>
+      <section class="graph-modal-panel" role="dialog" aria-modal="true" aria-labelledby="graph-modal-title">
+        <button class="graph-modal-close" type="button" aria-label="Close graph" data-close-modal>Close</button>
+        <div id="graph-modal-content"></div>
+      </section>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/map.js?v=20260716-raster-test-1"></script>
+  </body>
+</html>
