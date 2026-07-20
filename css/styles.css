@@ -300,10 +300,35 @@ input {
 }
 
 .sidebar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   height: 100vh;
   border-left: 1px solid var(--line);
   background: var(--panel);
+  overflow: hidden;
+}
+
+.sidebar-content {
+  min-height: 0;
+  flex: 1 1 auto;
+  padding-bottom: 155px;
   overflow-y: auto;
+}
+
+.sidebar-brand {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  width: 137px;
+  pointer-events: none;
+}
+
+.sidebar-brand img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .sidebar-empty,
@@ -943,6 +968,15 @@ input {
     min-height: 38vh;
     border-top: 1px solid var(--line);
     border-left: 0;
+  }
+
+  .sidebar-content {
+    padding-bottom: 130px;
+    overflow-y: visible;
+  }
+
+  .sidebar-brand {
+    width: 114px;
   }
 
   .map-search-panel {

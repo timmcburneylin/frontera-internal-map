@@ -598,7 +598,7 @@ function sidebarCloseButton(label = "Close details") {
 function renderDefaultSidebar() {
   sidebar.innerHTML = `
     <div class="sidebar-empty">
-      <h1>BC Burn Probability</h1>
+      <h1>Frontera Provincial Wildfire Prediction Mapping</h1>
       <p>Compare median burn probability and population across 100 WUI communities. Select a community to highlight it.</p>
       ${riskComparisonChartHtml(null, "is-clickable")}
       <button class="sidebar-action" type="button" data-open-overview>View larger</button>
@@ -1075,7 +1075,7 @@ function openOverviewGraphModal() {
     <div class="graph-modal-body">
       <div class="graph-card-header">
         <div>
-          <h1 id="graph-modal-title">BC Burn Probability</h1>
+          <h1 id="graph-modal-title">Frontera Provincial Wildfire Prediction Mapping</h1>
           <p>Comparison of median burn probability and population across 100 WUI communities.</p>
         </div>
       </div>
