@@ -1,6 +1,5 @@
 // Frontera community webmap.
-// To add communities later, add a point feature to data/communities.geojson
-// and place its graph PNG in graphs/<slug>.png.
+// Community risk comparison charts are rendered from data/communities.geojson.
 
 const COMMUNITY_DATA_URL = "data/communities.geojson";
 const WUI_POLYGON_DATA_URL = "data/wui-polygons.geojson";
@@ -11,7 +10,7 @@ const BURN_PROBABILITY_TILE_URL = "tiles/burn-probability/{z}/{x}/{y}.png";
 const HFI_TILE_URL = "tiles/hfi/{z}/{x}/{y}.png";
 const THREAT_TILE_URL = "tiles/threat/{z}/{x}/{y}.png";
 const ROS_TILE_URL = "tiles/ros/{z}/{x}/{y}.png";
-const GRAPH_ASSET_VERSION = "20260714-density-curves";
+const PSTA_TILE_URL = "tiles/psta/{z}/{x}/{y}.png";
 const BC_CENTER = [54.3, -125.2];
 const DEFAULT_ZOOM = 5;
 const SELECTED_ZOOM = 10;
@@ -74,120 +73,113 @@ const burnProbabilityOverlay = L.tileLayer(BURN_PROBABILITY_TILE_URL, {
   attribution: "Burn probability raster"
 });
 
-const hfiOverlay = L.tileLayer(HFI_TILE_URL, {
-  minZoom: 5,
-  maxNativeZoom: 10,
-  maxZoom: 12,
-  opacity: 0.65,
-  bounds: RASTER_BOUNDS,
-  noWrap: true,
-  keepBuffer: 4,
-  pane: "rasterDataPane",
-  className: "raster-overlay raster-overlay-hfi",
-  attribution: "Head fire intensity raster"
-});
+function rasterTileLayer(url, className, attribution) {
+  return L.tileLayer(url, {
+    minZoom: 5,
+    maxNativeZoom: 10,
+    maxZoom: 12,
+    opacity: 0.65,
+    bounds: RASTER_BOUNDS,
+    noWrap: true,
+    keepBuffer: 4,
+    pane: "rasterDataPane",
+    className: `raster-overlay ${className}`,
+    attribution
+  });
+}
 
-const threatOverlay = L.tileLayer(THREAT_TILE_URL, {
-  minZoom: 5,
-  maxNativeZoom: 10,
-  maxZoom: 12,
-  opacity: 0.65,
-  bounds: RASTER_BOUNDS,
-  noWrap: true,
-  keepBuffer: 4,
-  pane: "rasterDataPane",
-  className: "raster-overlay raster-overlay-threat",
-  attribution: "Wildfire threat raster"
-});
-
-const rosOverlay = L.tileLayer(ROS_TILE_URL, {
-  minZoom: 5,
-  maxNativeZoom: 10,
-  maxZoom: 12,
-  opacity: 0.65,
-  bounds: RASTER_BOUNDS,
-  noWrap: true,
-  keepBuffer: 4,
-  pane: "rasterDataPane",
-  className: "raster-overlay raster-overlay-ros",
-  attribution: "Rate of spread raster"
-});
+const hfiOverlay = rasterTileLayer(
+  HFI_TILE_URL,
+  "raster-overlay-hfi",
+  "Head fire intensity raster"
+);
+const threatOverlay = rasterTileLayer(
+  THREAT_TILE_URL,
+  "raster-overlay-threat",
+  "Wildfire threat raster"
+);
+const rosOverlay = rasterTileLayer(
+  ROS_TILE_URL,
+  "raster-overlay-ros",
+  "Rate of spread raster"
+);
+const pstaOverlay = rasterTileLayer(
+  PSTA_TILE_URL,
+  "raster-overlay-psta",
+  "PSTA wildfire threat raster"
+);
 
 streetBasemap.addTo(map);
+burnProbabilityOverlay.addTo(map);
 
-const rasterLayers = {
-  burnProbability: {
+const rasterLayers = [
+  {
     label: "Burn Probability (%)",
     layer: burnProbabilityOverlay,
-    legend: {
-      type: "gradient",
-      title: "Burn Probability (%)",
-      direction: "horizontal",
-      colors: ["#ffffb2", "#fed976", "#fd8d3c", "#f03b20", "#bd00a8"],
-      labels: ["Low", "Medium", "High"]
-    }
+    legend: `
+      <div class="raster-legend-title">Burn Probability (%)</div>
+      <div class="raster-legend-ramp burn-probability-ramp" aria-hidden="true"></div>
+      <div class="raster-legend-labels"><span>Low</span><span>Medium</span><span>High</span></div>
+    `
   },
-  hfi: {
+  {
     label: "Head Fire Intensity (kW/m)",
     layer: hfiOverlay,
-    legend: {
-      type: "swatches",
-      title: "Head Fire Intensity (kW/m)",
-      items: [
-        ["#ffff80", "0-10 kW/m (Rank 1)"],
-        ["#ffff00", "10-500 kW/m (Rank 2)"],
-        ["#ffcc00", "500-2000 kW/m (Rank 3)"],
-        ["#ff9900", "2000-4000 kW/m (Rank 4)"],
-        ["#ff6600", "4000-10000 kW/m (Rank 5)"],
-        ["#ff3300", "10000-25000 kW/m (Rank 6a)"],
-        ["#ff0000", "25000-500000 kW/m (Rank 6b)"]
-      ]
-    }
+    legend: `
+      <div class="raster-legend-title">Head Fire Intensity (kW/m)</div>
+      <div class="raster-legend-items">
+        ${[
+          ["#ffff80", "0-10 (Rank 1)"],
+          ["#ffff00", "10-500 (Rank 2)"],
+          ["#ffcc00", "500-2000 (Rank 3)"],
+          ["#ff9900", "2000-4000 (Rank 4)"],
+          ["#ff6600", "4000-10000 (Rank 5)"],
+          ["#ff3300", "10000-25000 (Rank 6a)"],
+          ["#ff0000", "25000-500000 (Rank 6b)"]
+        ].map(([color, label]) => `<div class="raster-legend-item"><span class="raster-legend-swatch" style="background:${color}"></span><span>${label}</span></div>`).join("")}
+      </div>
+    `
   },
-  threat: {
+  {
     label: "Wildfire Threat",
     layer: threatOverlay,
-    legend: {
-      type: "gradient",
-      title: "Wildfire Threat",
-      colors: [
-        "#faebdd",
-        "#f6c0a0",
-        "#f5946e",
-        "#ee654d",
-        "#d83949",
-        "#b41e53",
-        "#861d56",
-        "#551d4b",
-        "#291534",
-        "#03051a"
-      ],
-      labels: ["Low", "Moderate", "High"],
-      note: "Extremely Low Probability / Nil"
-    }
+    legend: `
+      <div class="raster-legend-title">Wildfire Threat</div>
+      <div class="raster-legend-ramp threat-ramp" aria-hidden="true"></div>
+      <div class="raster-legend-labels"><span>Low</span><span>Moderate</span><span>High</span></div>
+    `
   },
-  ros: {
+  {
     label: "Rate of Spread (m/min)",
     layer: rosOverlay,
-    legend: {
-      type: "swatches",
-      title: "Rate of Spread (m/min)",
-      items: [
-        ["#440154", "0-1 m/min"],
-        ["#443a83", "1-3 m/min"],
-        ["#31688e", "3-10 m/min"],
-        ["#21908c", "10-18 m/min"],
-        ["#35b779", "18-25 m/min"],
-        ["#8fd744", "25-60 m/min"],
-        ["#fde725", "60+ m/min"]
-      ]
-    }
+    legend: `
+      <div class="raster-legend-title">Rate of Spread (m/min)</div>
+      <div class="raster-legend-items">
+        ${[
+          ["#440154", "0-1"],
+          ["#443a83", "1-3"],
+          ["#31688e", "3-10"],
+          ["#21908c", "10-18"],
+          ["#35b779", "18-25"],
+          ["#8fd744", "25-60"],
+          ["#fde725", "60+"]
+        ].map(([color, label]) => `<div class="raster-legend-item"><span class="raster-legend-swatch" style="background:${color}"></span><span>${label}</span></div>`).join("")}
+      </div>
+    `
+  },
+  {
+    label: "PSTA Wildfire Threat",
+    layer: pstaOverlay,
+    legend: `
+      <div class="raster-legend-title">PSTA Wildfire Threat</div>
+      <div class="raster-legend-vertical">
+        <div class="raster-legend-vertical-ramp psta-ramp" aria-hidden="true"></div>
+        <div class="raster-legend-vertical-labels"><span>2</span><span>4</span><span>6</span><span>8</span><span>10</span></div>
+      </div>
+      <div class="raster-legend-note"><span class="raster-legend-swatch is-muted"></span>Extremely Low Probability / Nil</div>
+    `
   }
-};
-
-let activeRasterLayerKey = "";
-let rasterLegendContainer = null;
-let rasterLayerSelect = null;
+];
 
 const layerControl = L.control
   .layers(
@@ -196,6 +188,7 @@ const layerControl = L.control
       Imagery: imageryBasemap
     },
     {
+      ...Object.fromEntries(rasterLayers.map(({ label, layer }) => [label, layer])),
       Hillshade: hillshadeOverlay
     },
     {
@@ -204,122 +197,30 @@ const layerControl = L.control
   )
   .addTo(map);
 
-function rasterLegendHtml(legend) {
-  if (legend.type === "swatches") {
-    const items = legend.items
-      .map(
-        ([color, label]) => `
-          <div class="raster-legend-item">
-            <span class="raster-legend-swatch" style="background:${color}"></span>
-            <span>${label}</span>
-          </div>
-        `
-      )
-      .join("");
-
-    return `
-      <div class="raster-legend-title">${legend.title}</div>
-      <div class="raster-legend-items">${items}</div>
-    `;
-  }
-
-  if (legend.type === "verticalGradient") {
-    const gradient = `linear-gradient(180deg, ${legend.colors.join(", ")})`;
-    const labels = legend.labels.map((label) => `<span>${label}</span>`).join("");
-    const note = legend.note
-      ? `<div class="raster-legend-note"><span class="raster-legend-swatch is-muted"></span>${legend.note}</div>`
-      : "";
-
-    return `
-      <div class="raster-legend-title">${legend.title}</div>
-      <div class="raster-legend-vertical">
-        <div class="raster-legend-vertical-ramp" style="background:${gradient}" aria-hidden="true"></div>
-        <div class="raster-legend-vertical-labels">${labels}</div>
-      </div>
-      ${note}
-    `;
-  }
-
-  const gradient = `linear-gradient(90deg, ${legend.colors.join(", ")})`;
-  const labels = legend.labels.map((label) => `<span>${label}</span>`).join("");
-  const note = legend.note
-    ? `<div class="raster-legend-note"><span class="raster-legend-swatch is-muted"></span>${legend.note}</div>`
-    : "";
-
-  return `
-    <div class="raster-legend-title">${legend.title}</div>
-    <div class="raster-legend-ramp" style="background:${gradient}" aria-hidden="true"></div>
-    <div class="raster-legend-labels">${labels}</div>
-    ${note}
-  `;
-}
-
-function updateRasterLegend() {
-  if (!rasterLegendContainer || !activeRasterLayerKey) {
-    return;
-  }
-
-  rasterLegendContainer.innerHTML = rasterLegendHtml(rasterLayers[activeRasterLayerKey].legend);
-}
-
-function setActiveRasterLayer(key) {
-  const nextRaster = rasterLayers[key];
-  if (!nextRaster) {
-    return;
-  }
-
-  if (activeRasterLayerKey && activeRasterLayerKey !== key) {
-    map.removeLayer(rasterLayers[activeRasterLayerKey].layer);
-  }
-
-  activeRasterLayerKey = key;
-
-  if (!map.hasLayer(nextRaster.layer)) {
-    nextRaster.layer.addTo(map);
-  }
-
-  if (rasterLayerSelect && rasterLayerSelect.value !== key) {
-    rasterLayerSelect.value = key;
-  }
-
-  updateRasterLegend();
-}
-
-function addRasterSelectorToLayerControl() {
-  const layerControlContainer = layerControl.getContainer();
-  layerControlContainer.querySelector(".raster-select")?.remove();
-
-  const overlayList =
-    layerControlContainer.querySelector(".leaflet-control-layers-overlays") ||
-    layerControlContainer.querySelector(".leaflet-control-layers-list") ||
-    layerControlContainer;
-  const container = L.DomUtil.create("div", "raster-select");
-  const options = Object.entries(rasterLayers)
-    .map(([key, raster]) => `<option value="${key}">${raster.label}</option>`)
-    .join("");
-
-  container.innerHTML = `
-    <label for="raster-layer-select">Raster Layer</label>
-    <select id="raster-layer-select">${options}</select>
-  `;
-  rasterLayerSelect = container.querySelector("select");
-  rasterLayerSelect.value = activeRasterLayerKey || "burnProbability";
-  rasterLayerSelect.addEventListener("change", () => setActiveRasterLayer(rasterLayerSelect.value));
-  overlayList.prepend(container);
-  L.DomEvent.disableClickPropagation(container);
-  L.DomEvent.disableScrollPropagation(container);
-}
-
+let rasterLegendContainer = null;
 const rasterLegend = L.control({ position: "bottomleft" });
 rasterLegend.onAdd = () => {
-  rasterLegendContainer = L.DomUtil.create("div", "raster-legend leaflet-control");
-  L.DomEvent.disableClickPropagation(rasterLegendContainer);
-  L.DomEvent.disableScrollPropagation(rasterLegendContainer);
-  return rasterLegendContainer;
+  const container = L.DomUtil.create("div", "raster-legends leaflet-control");
+  rasterLegendContainer = container;
+  L.DomEvent.disableClickPropagation(container);
+  L.DomEvent.disableScrollPropagation(container);
+  return container;
 };
-addRasterSelectorToLayerControl();
+
+function updateRasterLegends() {
+  if (!rasterLegendContainer) {
+    return;
+  }
+  rasterLegendContainer.innerHTML = rasterLayers
+    .filter(({ layer }) => map.hasLayer(layer))
+    .map(({ legend }) => `<section class="raster-legend">${legend}</section>`)
+    .join("");
+  rasterLegendContainer.hidden = !rasterLegendContainer.innerHTML;
+}
+
 rasterLegend.addTo(map);
-setActiveRasterLayer("burnProbability");
+map.on("overlayadd overlayremove", updateRasterLegends);
+updateRasterLegends();
 
 const fireStatusLegend = L.control({ position: "bottomleft" });
 fireStatusLegend.onAdd = () => {
@@ -361,12 +262,15 @@ fireStatusLegend.addTo(map);
 
 const sidebar = document.querySelector("#community-sidebar");
 const searchInput = document.querySelector("#community-search");
-const searchOptions = document.querySelector("#community-options");
 const clearButton = document.querySelector("#clear-search");
 const fireSelect = document.querySelector("#fire-select");
 const clearFireButton = document.querySelector("#clear-fire");
 const graphModal = document.querySelector("#graph-modal");
 const graphModalContent = document.querySelector("#graph-modal-content");
+const riskChartTooltip = document.createElement("div");
+riskChartTooltip.className = "risk-chart-tooltip";
+riskChartTooltip.setAttribute("role", "tooltip");
+document.body.appendChild(riskChartTooltip);
 
 const communitiesBySlug = new Map();
 const communitiesByName = new Map();
@@ -385,11 +289,37 @@ let selectedFireMarker = null;
 let selectedFireFeature = null;
 let selectedWuiLayer = null;
 let selectedWuiFeature = null;
+let communityRiskRows = [];
 
 function normalize(value) {
   return String(value || "")
     .trim()
     .toLowerCase();
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function formatOrdinal(value) {
+  const remainder100 = value % 100;
+  const remainder10 = value % 10;
+  const suffix =
+    remainder100 >= 11 && remainder100 <= 13
+      ? "th"
+      : remainder10 === 1
+        ? "st"
+        : remainder10 === 2
+          ? "nd"
+          : remainder10 === 3
+            ? "rd"
+            : "th";
+  return `${value}${suffix}`;
 }
 
 function fireLegendIcon(className) {
@@ -668,8 +598,10 @@ function sidebarCloseButton(label = "Close details") {
 function renderDefaultSidebar() {
   sidebar.innerHTML = `
     <div class="sidebar-empty">
-      <h1>Frontera Wildfire Risk</h1>
-      <p>Select a community or active wildfire to view its details.</p>
+      <h1>BC Burn Probability</h1>
+      <p>Compare median burn probability and population across 100 WUI communities. Select a community to highlight it.</p>
+      ${riskComparisonChartHtml(null, "is-clickable")}
+      <button class="sidebar-action" type="button" data-open-overview>View larger</button>
     </div>
   `;
 }
@@ -874,7 +806,6 @@ function loadCurrentFirePerimeters() {
       const fireLayer = L.layerGroup([firePerimeterLayer, fireMarkerLayer]).addTo(map);
 
       layerControl.addOverlay(fireLayer, "Current Wildfires");
-      addRasterSelectorToLayerControl();
     })
     .catch((error) => {
       console.warn(error);
@@ -932,7 +863,6 @@ function loadWuiPolygons() {
       }).addTo(map);
 
       layerControl.addOverlay(wuiPolygonLayer, "WUI Risk Class Polygons");
-      addRasterSelectorToLayerControl();
     })
     .catch((error) => {
       console.warn(error);
@@ -945,39 +875,146 @@ function formatCommunity(feature) {
     slug,
     wui_name: wuiName,
     wui_population: wuiPopulation,
-    wui_population_rank: wuiPopulationRank,
+    burn_probability_rank: burnProbabilityRank,
+    median_bp: medianBurnProbability,
     wui_places: wuiPlaces = [],
-    graph,
-    has_graph: hasGraph
   } = feature.properties;
 
   return {
     name,
     slug,
     wuiName,
-    graph,
-    hasGraph: Boolean(hasGraph && graph),
+    population: wuiPopulation,
+    medianBurnProbability,
+    burnProbabilityRank,
     places: wuiPlaces,
     placesLabel: wuiPlaces.length ? wuiPlaces.join(", ") : "Not listed",
     populationLabel:
       typeof wuiPopulation === "number" ? wuiPopulation.toLocaleString() : "Needs lookup",
-    rankLabel: wuiPopulationRank ? `#${wuiPopulationRank} of 100` : "Unavailable"
+    rankLabel: burnProbabilityRank ? `#${burnProbabilityRank} of ${communityRiskRows.length || 100}` : "Unavailable",
+    standingLabel: burnProbabilityRank
+      ? `${formatOrdinal(
+          Math.round(
+            ((communityRiskRows.length - burnProbabilityRank + 1) / communityRiskRows.length) * 100
+          )
+        )} percentile among communities`
+      : "Relative standing unavailable"
   };
 }
 
-function graphImageHtml(details, className = "") {
-  if (!details.hasGraph) {
+function riskComparisonChartHtml(details = null, className = "") {
+  if (
+    !communityRiskRows.length ||
+    (details && typeof details.medianBurnProbability !== "number")
+  ) {
     return `
       <div class="graph-missing">
-        <strong>Graph pending</strong>
-        <span>No wildfire risk graph PNG has been added for this WUI yet.</span>
+        <strong>Comparison unavailable</strong>
+        <span>Community burn probability data could not be loaded.</span>
       </div>
     `;
   }
 
+  const width = 920;
+  const height = 500;
+  const margin = { left: 92, right: 42, top: 38, bottom: 70 };
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
+  const populations = communityRiskRows.map((row) => row.population);
+  const probabilities = communityRiskRows.map((row) => row.medianBp);
+  const logMin = Math.log10(Math.min(...populations));
+  const logMax = Math.log10(Math.max(...populations));
+  const bpMax = Math.max(...probabilities) * 1.06;
+  const x = (value) => margin.left + (value / bpMax) * plotWidth;
+  const y = (value) =>
+    margin.top + plotHeight - ((Math.log10(value) - logMin) / (logMax - logMin)) * plotHeight;
+  const percent = (value) => `${(value * 100).toFixed(2)}%`;
+  const number = (value) => Math.round(value).toLocaleString();
+  const grid = Array.from({ length: 6 }, (_, index) => {
+    const fraction = index / 5;
+    const gridX = margin.left + fraction * plotWidth;
+    const gridY = margin.top + plotHeight - fraction * plotHeight;
+    const populationTick = 10 ** (logMin + (logMax - logMin) * fraction);
+    return `
+      <line x1="${gridX}" y1="${margin.top}" x2="${gridX}" y2="${margin.top + plotHeight}" class="risk-chart-grid" />
+      <line x1="${margin.left}" y1="${gridY}" x2="${margin.left + plotWidth}" y2="${gridY}" class="risk-chart-grid" />
+      <text x="${margin.left - 12}" y="${gridY + 4}" text-anchor="end" class="risk-chart-tick">${number(populationTick)}</text>
+    `;
+  }).join("");
+  const points = communityRiskRows
+    .filter((row) => !details || row.wuiName !== details.wuiName)
+    .map(
+      (row) => `
+        <circle
+          cx="${x(row.medianBp)}"
+          cy="${y(row.population)}"
+          r="5"
+          class="risk-chart-point"
+          tabindex="0"
+          data-risk-tooltip="${escapeHtml(
+            `${row.name}|${percent(row.medianBp)}|${number(row.population)}|#${row.rank} of ${communityRiskRows.length}`
+          )}"
+        >
+          <title>${escapeHtml(row.name)}: ${percent(row.medianBp)} median burn probability; population ${number(row.population)}; rank #${row.rank}</title>
+        </circle>
+      `
+    )
+    .join("");
+  let selectedMarkup = "";
+  if (details) {
+    const selectedX = x(details.medianBurnProbability);
+    const selectedY = y(details.population);
+    const labelOnRight = selectedX < margin.left + plotWidth * 0.68;
+    const labelX = Math.max(
+      margin.left + 70,
+      Math.min(margin.left + plotWidth - 70, selectedX + (labelOnRight ? 46 : -46))
+    );
+    const labelY = Math.max(
+      margin.top + 20,
+      Math.min(margin.top + plotHeight - 16, selectedY - 34)
+    );
+    selectedMarkup = `
+      <line x1="${selectedX}" y1="${selectedY}" x2="${labelX}" y2="${labelY}" class="risk-chart-leader" />
+      <circle cx="${selectedX}" cy="${selectedY}" r="12" class="risk-chart-selected-halo" />
+      <circle
+        cx="${selectedX}"
+        cy="${selectedY}"
+        r="7"
+        class="risk-chart-selected"
+        tabindex="0"
+        data-risk-tooltip="${escapeHtml(
+          `${details.name}|${percent(details.medianBurnProbability)}|${details.populationLabel}|${details.rankLabel}`
+        )}"
+      ><title>${escapeHtml(details.name)}: ${percent(details.medianBurnProbability)}; ${details.rankLabel}</title></circle>
+      <text x="${labelX + (labelOnRight ? 6 : -6)}" y="${labelY - 4}" text-anchor="${labelOnRight ? "start" : "end"}" class="risk-chart-label">${escapeHtml(details.name)}</text>
+    `;
+  }
+
   return `
-    <div class="graph-frame ${className}">
-      <img src="${details.graph}?v=${GRAPH_ASSET_VERSION}" alt="Wildfire risk graph for ${details.name}" />
+    <div class="graph-frame risk-chart-frame ${className}">
+      ${
+        details
+          ? `<div class="risk-chart-stats">
+              <div><span>Burn probability rank</span><strong>${details.rankLabel}</strong></div>
+              <div><span>Community risk percentile</span><strong>${details.standingLabel}</strong></div>
+              <div><span>WUI population</span><strong>${details.populationLabel}</strong></div>
+            </div>`
+          : ""
+      }
+      <svg class="risk-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${
+        details
+          ? `${escapeHtml(details.name)} compared with 100 WUI communities by median burn probability and population`
+          : "All 100 WUI communities compared by median burn probability and population"
+      }">
+        ${grid}
+        <line x1="${margin.left}" y1="${margin.top + plotHeight}" x2="${margin.left + plotWidth}" y2="${margin.top + plotHeight}" class="risk-chart-axis" />
+        <line x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + plotHeight}" class="risk-chart-axis" />
+        <text x="${margin.left + plotWidth / 2}" y="${height - 18}" text-anchor="middle" class="risk-chart-axis-title">Median annual burn probability</text>
+        <text x="22" y="${margin.top + plotHeight / 2}" transform="rotate(-90 22 ${margin.top + plotHeight / 2})" text-anchor="middle" class="risk-chart-axis-title">WUI population (log scale)</text>
+        ${points}
+        ${selectedMarkup}
+      </svg>
+      <p class="graph-caption">Each point is one WUI community. Population uses a logarithmic scale so communities of very different sizes remain visible.</p>
     </div>
   `;
 }
@@ -989,7 +1026,7 @@ function popupHtml(feature) {
     <div class="community-popup">
       <strong>${details.name}</strong>
       <span>WUI population ${details.populationLabel}</span><br />
-      <span>WUI Population Rank ${details.rankLabel}</span>
+      <span>Burn probability rank ${details.rankLabel}</span>
     </div>
   `;
 }
@@ -1003,14 +1040,14 @@ function renderSidebar(feature) {
       ${sidebarCloseButton("Close community details")}
       <div class="detail-meta" aria-label="Community metadata">
         <span>WUI population: ${details.populationLabel}</span>
-        <span>WUI Population Rank: ${details.rankLabel}</span>
+        <span>Burn probability rank: ${details.rankLabel}</span>
       </div>
       <section class="wui-places" aria-label="Populated places included in this WUI">
         <h2>Included places</h2>
         <p>${details.placesLabel}</p>
       </section>
-      ${graphImageHtml(details, "is-clickable")}
-      ${details.hasGraph ? `<button class="sidebar-action" type="button" data-open-modal="${details.slug}">View larger</button>` : ""}
+      ${riskComparisonChartHtml(details, "is-clickable")}
+      <button class="sidebar-action" type="button" data-open-modal="${details.slug}">View larger</button>
     </article>
   `;
 }
@@ -1023,10 +1060,26 @@ function openGraphModal(feature) {
       <div class="graph-card-header">
         <div>
           <h1 id="graph-modal-title">${details.name}</h1>
-          <p>WUI population ${details.populationLabel} | WUI Population Rank ${details.rankLabel}</p>
+          <p>Burn probability rank ${details.rankLabel} | WUI population ${details.populationLabel}</p>
         </div>
       </div>
-      ${graphImageHtml(details)}
+      ${riskComparisonChartHtml(details)}
+    </div>
+  `;
+  graphModal.classList.add("is-open");
+  graphModal.setAttribute("aria-hidden", "false");
+}
+
+function openOverviewGraphModal() {
+  graphModalContent.innerHTML = `
+    <div class="graph-modal-body">
+      <div class="graph-card-header">
+        <div>
+          <h1 id="graph-modal-title">BC Burn Probability</h1>
+          <p>Comparison of median burn probability and population across 100 WUI communities.</p>
+        </div>
+      </div>
+      ${riskComparisonChartHtml()}
     </div>
   `;
   graphModal.classList.add("is-open");
@@ -1091,7 +1144,14 @@ function registerCommunity(feature, layer) {
 
   const option = document.createElement("option");
   option.value = name;
-  searchOptions.appendChild(option);
+  option.textContent = name;
+  searchInput.appendChild(option);
+}
+
+function sortCommunityOptions() {
+  const options = [...searchInput.options].slice(1);
+  options.sort((a, b) => a.textContent.localeCompare(b.textContent));
+  options.forEach((option) => searchInput.appendChild(option));
 }
 
 function loadCommunities() {
@@ -1104,9 +1164,18 @@ function loadCommunities() {
       return response.json();
     })
     .then((geojson) => {
-      geojson.features = [...(geojson.features || [])].sort((a, b) =>
-        String(a.properties?.name || "").localeCompare(String(b.properties?.name || ""))
+      geojson.features = [...(geojson.features || [])].sort(
+        (a, b) =>
+          Number(a.properties?.burn_probability_rank || Infinity) -
+          Number(b.properties?.burn_probability_rank || Infinity)
       );
+      communityRiskRows = geojson.features.map((feature) => ({
+        name: feature.properties.name,
+        wuiName: feature.properties.wui_name,
+        population: feature.properties.wui_population,
+        medianBp: feature.properties.median_bp,
+        rank: feature.properties.burn_probability_rank
+      }));
       const communityLayer = L.geoJSON(geojson, {
         pointToLayer: communityMarkerForFeature,
         onEachFeature: (feature, layer) => {
@@ -1118,11 +1187,14 @@ function loadCommunities() {
           layer.on("click", () => showCommunity(feature, layer));
         }
       }).addTo(map);
+      sortCommunityOptions();
 
       layerControl.addOverlay(communityLayer, "Communities");
-      addRasterSelectorToLayerControl();
       requestAnimationFrame(() => map.invalidateSize());
       map.fitBounds(RASTER_BOUNDS);
+      if (!selectedFeature && !selectedFireFeature && !selectedWuiFeature) {
+        renderDefaultSidebar();
+      }
     })
     .catch((error) => {
       sidebar.innerHTML = `
@@ -1136,13 +1208,14 @@ function loadCommunities() {
 }
 
 searchInput.addEventListener("change", () => {
-  selectCommunityByName(searchInput.value);
-});
-
-searchInput.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    event.preventDefault();
+  if (searchInput.value) {
     selectCommunityByName(searchInput.value);
+  } else {
+    const hadSelectedCommunity = Boolean(selectedFeature);
+    clearSelectedCommunity();
+    if (hadSelectedCommunity) {
+      renderDefaultSidebar();
+    }
   }
 });
 
@@ -1179,10 +1252,16 @@ clearFireButton.addEventListener("click", () => {
 sidebar.addEventListener("click", (event) => {
   const closeButton = event.target.closest("[data-close-sidebar]");
   const modalButton = event.target.closest("[data-open-modal]");
+  const overviewButton = event.target.closest("[data-open-overview]");
   const graphFrame = event.target.closest(".graph-frame.is-clickable");
 
   if (closeButton) {
     closeSidebarPane();
+    return;
+  }
+
+  if (overviewButton || (graphFrame && !selectedFeature)) {
+    openOverviewGraphModal();
     return;
   }
 
@@ -1196,6 +1275,52 @@ sidebar.addEventListener("click", (event) => {
 graphModal.addEventListener("click", (event) => {
   if (event.target.closest("[data-close-modal]")) {
     closeGraphModal();
+  }
+});
+
+function showRiskChartTooltip(point, clientX, clientY) {
+  const [name, burnProbability, population, rank] = point.dataset.riskTooltip.split("|");
+  riskChartTooltip.innerHTML = `
+    <strong>${escapeHtml(name)}</strong>
+    <span>Median burn probability: ${escapeHtml(burnProbability)}</span>
+    <span>WUI population: ${escapeHtml(population)}</span>
+    <span>Burn probability rank: ${escapeHtml(rank)}</span>
+  `;
+  riskChartTooltip.classList.add("is-visible");
+
+  const padding = 14;
+  const tooltipRect = riskChartTooltip.getBoundingClientRect();
+  let left = clientX + 14;
+  let top = clientY - tooltipRect.height / 2;
+  if (left + tooltipRect.width > window.innerWidth - padding) {
+    left = clientX - tooltipRect.width - 14;
+  }
+  top = Math.max(padding, Math.min(window.innerHeight - tooltipRect.height - padding, top));
+  riskChartTooltip.style.left = `${left}px`;
+  riskChartTooltip.style.top = `${top}px`;
+}
+
+document.addEventListener("pointermove", (event) => {
+  const point = event.target.closest("[data-risk-tooltip]");
+  if (point) {
+    showRiskChartTooltip(point, event.clientX, event.clientY);
+  } else {
+    riskChartTooltip.classList.remove("is-visible");
+  }
+});
+
+document.addEventListener("focusin", (event) => {
+  const point = event.target.closest("[data-risk-tooltip]");
+  if (!point) {
+    return;
+  }
+  const rect = point.getBoundingClientRect();
+  showRiskChartTooltip(point, rect.right, rect.top + rect.height / 2);
+});
+
+document.addEventListener("focusout", (event) => {
+  if (event.target.closest("[data-risk-tooltip]")) {
+    riskChartTooltip.classList.remove("is-visible");
   }
 });
 

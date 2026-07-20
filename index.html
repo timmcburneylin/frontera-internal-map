@@ -6,7 +6,7 @@
     <title>Frontera Wildfire Risk Webmap</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="css/styles.css?v=20260716-raster-test-1" />
+    <link rel="stylesheet" href="css/styles.css?v=20260720-psta-charts-1" />
   </head>
   <body>
     <main class="app-shell">
@@ -15,16 +15,11 @@
           <div class="search-panel">
             <label for="community-search">Community</label>
             <div class="search-row">
-              <input
-                id="community-search"
-                type="search"
-                autocomplete="off"
-                list="community-options"
-                placeholder="Search BC communities"
-              />
+              <select id="community-search">
+                <option value="">Select a community</option>
+              </select>
               <button id="clear-search" type="button" aria-label="Clear selected community">Clear</button>
             </div>
-            <datalist id="community-options"></datalist>
           </div>
 
           <div class="fire-panel">
@@ -44,7 +39,7 @@
       <aside id="community-sidebar" class="sidebar" aria-live="polite">
         <div class="sidebar-empty">
           <h1>Frontera Wildfire Risk</h1>
-          <p>Select a community or active wildfire to view its details.</p>
+          <p>Compare median burn probability and population across 100 WUI communities.</p>
         </div>
       </aside>
     </main>
@@ -58,6 +53,6 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="js/map.js?v=20260716-raster-test-1"></script>
+    <script src="js/map.js?v=20260720-psta-charts-1"></script>
   </body>
 </html>
