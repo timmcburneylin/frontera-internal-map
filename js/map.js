@@ -247,7 +247,7 @@ fireStatusLegend.onAdd = () => {
       ${fireLegendIcon("is-unknown-status")}
       <span>Unknown</span>
     </div>
-    <div class="fire-status-legend-item is-perimeter">
+    <div class="fire-status-legend-item is-perimeter" hidden>
       <svg class="fire-perimeter-swatch" width="18" height="14" viewBox="0 0 18 14" aria-hidden="true">
         <path d="M1 7h16" fill="none" stroke="#0891b2" stroke-width="3" />
       </svg>
@@ -293,6 +293,8 @@ let selectedLayer = null;
 let selectedFeature = null;
 let selectedFireMarker = null;
 let selectedFireFeature = null;
+let currentFirePerimeterLayer = null;
+let selectedFirePerimeterLayer = null;
 let selectedWuiLayer = null;
 let selectedWuiFeature = null;
 let communityRiskRows = [];
@@ -435,6 +437,55 @@ function firePerimeterStyle() {
     opacity: 0.95,
     fill: false
   };
+}
+
+function updateFirePerimeterLegend() {
+  const perimeterLegendItem = document.querySelector(".fire-status-legend-item.is-perimeter");
+  if (!perimeterLegendItem) {
+    return;
+  }
+
+  const perimeterOverlayIsVisible =
+    currentFirePerimeterLayer && map.hasLayer(currentFirePerimeterLayer);
+  const selectedPerimeterIsVisible =
+    selectedFirePerimeterLayer && map.hasLayer(selectedFirePerimeterLayer);
+  perimeterLegendItem.hidden = !(perimeterOverlayIsVisible || selectedPerimeterIsVisible);
+}
+
+function removeSelectedFirePerimeter() {
+  if (selectedFirePerimeterLayer) {
+    selectedFirePerimeterLayer.removeFrom(map);
+    selectedFirePerimeterLayer = null;
+  }
+
+  updateFirePerimeterLegend();
+}
+
+function showSelectedFirePerimeter(fireRecord) {
+  removeSelectedFirePerimeter();
+
+  if (
+    !fireRecord?.perimeter ||
+    (currentFirePerimeterLayer && map.hasLayer(currentFirePerimeterLayer))
+  ) {
+    updateFirePerimeterLegend();
+    return;
+  }
+
+  selectedFirePerimeterLayer = L.geoJSON(fireRecord.perimeter.feature, {
+    pane: "firePerimeterPane",
+    style: firePerimeterStyle,
+    onEachFeature: (feature, layer) => {
+      const id = fireId(feature);
+      layer.bindPopup(firePopupHtml(feature), {
+        autoPan: false,
+        keepInView: false
+      });
+      layer.on("click", () => selectFireById(id));
+    }
+  }).addTo(map);
+
+  updateFirePerimeterLegend();
 }
 
 function fireId(feature) {
@@ -726,6 +777,7 @@ function selectFireById(id) {
   selectedFireMarker.getElement()?.classList.add("is-selected");
   clearSelectedCommunity();
   clearSelectedWuiPolygon();
+  showSelectedFirePerimeter(fireRecord);
 
   const latlng = fireRecord.marker.getLatLng();
   const targetZoom = Math.max(map.getZoom(), SELECTED_FIRE_ZOOM);
@@ -746,6 +798,7 @@ function clearSelectedFire() {
   }
 
   selectedFireFeature = null;
+  removeSelectedFirePerimeter();
 }
 
 function loadCurrentFirePerimeters() {
@@ -771,7 +824,7 @@ function loadCurrentFirePerimeters() {
       };
       const fireMarkerLayer = L.layerGroup();
       const perimeterLayersById = new Map();
-      const firePerimeterLayer = L.geoJSON(geojson, {
+      currentFirePerimeterLayer = L.geoJSON(geojson, {
         pane: "firePerimeterPane",
         filter: (feature) => feature.geometry?.type !== "Point",
         style: firePerimeterStyle,
@@ -816,9 +869,11 @@ function loadCurrentFirePerimeters() {
         });
       });
       populateFireSelect(geojson.features);
-      const fireLayer = L.layerGroup([firePerimeterLayer, fireMarkerLayer]).addTo(map);
+      fireMarkerLayer.addTo(map);
 
-      layerControl.addOverlay(fireLayer, "Current Wildfires");
+      layerControl.addOverlay(fireMarkerLayer, "Current Wildfires");
+      layerControl.addOverlay(currentFirePerimeterLayer, "Current Fire Perimeters");
+      updateFirePerimeterLegend();
     })
     .catch((error) => {
       console.warn(error);
@@ -1304,6 +1359,20 @@ clearFireButton.addEventListener("click", () => {
   if (hadSelectedFire) {
     renderDefaultSidebar();
   }
+});
+
+map.on("overlayadd overlayremove", (event) => {
+  if (event.layer !== currentFirePerimeterLayer) {
+    return;
+  }
+
+  if (event.type === "overlayadd") {
+    removeSelectedFirePerimeter();
+  } else if (selectedFireFeature) {
+    showSelectedFirePerimeter(fireLayersById.get(fireId(selectedFireFeature)));
+  }
+
+  updateFirePerimeterLegend();
 });
 
 sidebar.addEventListener("click", (event) => {
