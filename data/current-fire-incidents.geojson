@@ -339,29 +339,29 @@
     },
     {
       "type": "Feature",
-      "id": "bcws-incident-R11970",
+      "id": "bcws-incident-G41970",
       "geometry": {
         "bbox": [
-          -125.141242,
-          54.130998,
-          -125.141242,
-          54.130998
+          -125.100417,
+          54.12675,
+          -125.100417,
+          54.12675
         ],
         "type": "Point",
         "coordinates": [
-          -125.141242,
-          54.130998
+          -125.100417,
+          54.12675
         ]
       },
       "properties": {
-        "FIRE_NUMBER": "R11970",
-        "INCIDENT_NAME": "R11970",
-        "INCIDENT_NUMBER_LABEL": "R11970",
+        "FIRE_NUMBER": "G41970",
+        "INCIDENT_NAME": "G41970",
+        "INCIDENT_NUMBER_LABEL": "G41970",
         "INCIDENT_FIRE_YEAR": 2026,
         "FIRE_STATUS": "Out of Control",
         "FIRE_SIZE_HECTARES": null,
         "TRACK_DATE": null,
-        "FIRE_URL": "https://wildfiresituation.nrs.gov.bc.ca/incidents?fireYear=2026&incidentNumber=R11970",
+        "FIRE_URL": "https://wildfiresituation.nrs.gov.bc.ca/incidents?fireYear=2026&incidentNumber=G41970",
         "DATA_SOURCE": "incident-point"
       }
     },
@@ -2105,7 +2105,7 @@
   "metadata": {
     "source": "https://wildfiresituation.nrs.gov.bc.ca/wfnews-api/publicPublishedIncident/features",
     "incident_point_count": 75,
-    "generated_at_utc": "2026-08-26T07:59:41+00:00",
+    "generated_at_utc": "2026-08-26T10:51:37+00:00",
     "note": "Active BCWS incidents without a published perimeter."
   }
 }
