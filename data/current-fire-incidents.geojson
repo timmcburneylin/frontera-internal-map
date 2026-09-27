@@ -3,6 +3,34 @@
   "features": [
     {
       "type": "Feature",
+      "id": "bcws-incident-C52291",
+      "geometry": {
+        "bbox": [
+          -125.256544,
+          52.462461,
+          -125.256544,
+          52.462461
+        ],
+        "type": "Point",
+        "coordinates": [
+          -125.256544,
+          52.462461
+        ]
+      },
+      "properties": {
+        "FIRE_NUMBER": "C52291",
+        "INCIDENT_NAME": "C52291",
+        "INCIDENT_NUMBER_LABEL": "C52291",
+        "INCIDENT_FIRE_YEAR": 2026,
+        "FIRE_STATUS": "Out of Control",
+        "FIRE_SIZE_HECTARES": null,
+        "TRACK_DATE": null,
+        "FIRE_URL": "https://wildfiresituation.nrs.gov.bc.ca/incidents?fireYear=2026&incidentNumber=C52291",
+        "DATA_SOURCE": "incident-point"
+      }
+    },
+    {
+      "type": "Feature",
       "id": "bcws-incident-N72245",
       "geometry": {
         "bbox": [
@@ -26,6 +54,34 @@
         "FIRE_SIZE_HECTARES": null,
         "TRACK_DATE": null,
         "FIRE_URL": "https://wildfiresituation.nrs.gov.bc.ca/incidents?fireYear=2026&incidentNumber=N72245",
+        "DATA_SOURCE": "incident-point"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "bcws-incident-G12290",
+      "geometry": {
+        "bbox": [
+          -123.420283,
+          53.786417,
+          -123.420283,
+          53.786417
+        ],
+        "type": "Point",
+        "coordinates": [
+          -123.420283,
+          53.786417
+        ]
+      },
+      "properties": {
+        "FIRE_NUMBER": "G12290",
+        "INCIDENT_NAME": "G12290",
+        "INCIDENT_NUMBER_LABEL": "G12290",
+        "INCIDENT_FIRE_YEAR": 2026,
+        "FIRE_STATUS": "Being Held",
+        "FIRE_SIZE_HECTARES": null,
+        "TRACK_DATE": null,
+        "FIRE_URL": "https://wildfiresituation.nrs.gov.bc.ca/incidents?fireYear=2026&incidentNumber=G12290",
         "DATA_SOURCE": "incident-point"
       }
     },
@@ -648,8 +704,8 @@
   ],
   "metadata": {
     "source": "https://wildfiresituation.nrs.gov.bc.ca/wfnews-api/publicPublishedIncident/features",
-    "incident_point_count": 23,
-    "generated_at_utc": "2026-09-27T13:01:59+00:00",
+    "incident_point_count": 25,
+    "generated_at_utc": "2026-09-27T22:11:41+00:00",
     "note": "Active BCWS incidents without a published perimeter."
   }
 }
