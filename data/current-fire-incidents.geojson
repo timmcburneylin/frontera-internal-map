@@ -6,15 +6,15 @@
       "id": "bcws-incident-N72306",
       "geometry": {
         "bbox": [
-          -116.565833,
-          49.199533,
-          -116.565833,
-          49.199533
+          -116.5695,
+          49.200167,
+          -116.5695,
+          49.200167
         ],
         "type": "Point",
         "coordinates": [
-          -116.565833,
-          49.199533
+          -116.5695,
+          49.200167
         ]
       },
       "properties": {
@@ -397,7 +397,7 @@
   "metadata": {
     "source": "https://wildfiresituation.nrs.gov.bc.ca/wfnews-api/publicPublishedIncident/features",
     "incident_point_count": 14,
-    "generated_at_utc": "2026-10-03T22:08:00+00:00",
+    "generated_at_utc": "2026-10-04T00:37:38+00:00",
     "note": "Active BCWS incidents without a published perimeter."
   }
 }
